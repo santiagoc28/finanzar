@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\",\"User\"\\); Start-Process -FilePath \"node.exe\" -ArgumentList \"server.js\" -WorkingDirectory \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\finanzar\\\\bot\" -PassThru | Select-Object Id; Start-Sleep -Seconds 3; Invoke-RestMethod \"http://localhost:3000/api/health\" | ConvertTo-Json)"
+    ]
+  }
+}

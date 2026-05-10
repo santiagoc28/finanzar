@@ -1,0 +1,54 @@
+{
+  "gastos": [
+    {
+      "id": 1,
+      "desc": "Café",
+      "monto": 2000,
+      "categoria": "comida",
+      "fecha": "2026-05-05",
+      "compartido_con": null,
+      "monto_personal": 2000,
+      "confirmado": 1,
+      "creado_en": "5/5/2026, 07:06:24"
+    },
+    {
+      "id": 3,
+      "desc": "Dionysos",
+      "monto": 500000,
+      "categoria": "otros",
+      "fecha": "2026-05-05",
+      "compartido_con": [
+        "Manu"
+      ],
+      "monto_personal": 250000,
+      "confirmado": 1,
+      "creado_en": "5/5/2026, 07:08:45"
+    },
+    {
+      "id": 4,
+      "desc": "McDonald’s",
+      "monto": 54000,
+      "categoria": "otros",
+      "fecha": "2026-05-05",
+      "compartido_con": [
+        "Manu"
+      ],
+      "monto_personal": 27000,
+      "confirmado": 1,
+      "creado_en": "5/5/2026, 07:22:11"
+    },
+    {
+      "id": 5,
+      "desc": "Cena",
+      "monto": 40000,
+      "categoria": "comida",
+      "fecha": "2026-05-06",
+      "compartido_con": [
+        "Cami"
+      ],
+      "monto_personal": 20000,
+      "confirmado": 1,
+      "creado_en": "5/5/2026, 11:33:29"
+    }
+  ]
+}
