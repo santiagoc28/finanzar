@@ -3,7 +3,7 @@
 // ============================================================
 
 const TelegramBot        = require('node-telegram-bot-api');
-const { parsearMensaje } = require('./parser');
+const { parsearMensaje, parsearMultiple } = require('./parser');
 const db                 = require('./db');
 
 const token         = process.env.TELEGRAM_BOT_TOKEN;
@@ -20,11 +20,17 @@ bot.onText(/\/(start|help)/, (msg) => {
   if (!esAutorizado(msg)) return;
   bot.sendMessage(msg.chat.id,
     '💰 *FinanzAR Bot* — Registrá gastos rápido\n\n' +
-    '*Formatos válidos:*\n' +
+    '*Un gasto:*\n' +
     '`Café 3500`\n' +
     '`Almuerzo 8000 con Juan y María`\n' +
-    '`Uber 4500 transporte`\n' +
-    '`Cena 12000 con Pedro`\n\n' +
+    '`Uber 4500 transporte`\n\n' +
+    '*Para el resumen de otro mes (tarjeta):*\n' +
+    '`McDonald\'s 5000 junio`\n' +
+    '`Supermercado 12000 para junio`\n' +
+    '`Nafta 8000 15/06`\n' +
+    '`Ropa 9000 próximo mes`\n\n' +
+    '*Varios gastos (separados por coma o línea):*\n' +
+    '`McDonald\'s 5000 junio, Uber 3000, Super 12000 junio`\n\n' +
     '*Categorías detectadas automáticamente:*\n' +
     'comida · transporte · servicios · entretenimiento · salud · ropa\n\n' +
     '*Comandos:*\n' +
@@ -83,35 +89,46 @@ bot.on('message', (msg) => {
   const texto = msg.text;
   if (!texto || texto.startsWith('/')) return;
 
-  const gasto = parsearMensaje(texto);
+  const gastos = parsearMultiple(texto);
 
-  if (!gasto) {
+  if (gastos.length === 0) {
     bot.sendMessage(msg.chat.id,
       '❓ No entendí ese gasto. Probá con:\n\n' +
       '`Café 3500`\n' +
       '`Almuerzo 8000 con Juan y María`\n' +
-      '`Uber 4500 transporte`\n\n' +
+      '`McDonald\'s 5000, Uber 3000, Super 12000`\n\n' +
       'Usá /help para ver todos los formatos.',
       { parse_mode: 'Markdown' }
     );
     return;
   }
 
-  const guardado = db.insertGasto(gasto);
+  const guardados = gastos.map(g => db.insertGasto(g));
 
-  let respuesta = `✅ *${guardado.desc}* — $${fmt(guardado.monto)}`;
-
-  if (guardado.compartido_con) {
-    const personas   = guardado.compartido_con;
-    const totalPerso = personas.length + 1;
-    respuesta += `\n👥 Con ${personas.join(' y ')} (${totalPerso} en total)`;
-    respuesta += `\n💸 Tu parte: *$${fmt(guardado.monto_personal)}*`;
+  if (guardados.length === 1) {
+    const g = guardados[0];
+    let respuesta = `✅ *${g.desc}* — $${fmt(g.monto)}`;
+    if (g.compartido_con) {
+      const totalPerso = g.compartido_con.length + 1;
+      respuesta += `\n👥 Con ${g.compartido_con.join(' y ')} (${totalPerso} en total)`;
+      respuesta += `\n💸 Tu parte: *$${fmt(g.monto_personal)}*`;
+    }
+    respuesta += `\n🏷 ${g.categoria}  ·  📅 ${g.fecha}`;
+    respuesta += `\n\n_Pendiente de confirmar en FinanzAR_`;
+    bot.sendMessage(msg.chat.id, respuesta, { parse_mode: 'Markdown' });
+  } else {
+    const totalPersonal = guardados.reduce((s, g) => s + (g.monto_personal || g.monto), 0);
+    const lista = guardados.map(g => {
+      let linea = `• *${g.desc}* — $${fmt(g.monto_personal || g.monto)} (${g.categoria})`;
+      if (g.compartido_con) linea += ` 👥 con ${g.compartido_con.join(' y ')}`;
+      return linea;
+    }).join('\n');
+    const respuesta =
+      `✅ *${guardados.length} gastos registrados*\n\n${lista}\n\n` +
+      `💰 Total tu parte: *$${fmt(totalPersonal)}*\n\n` +
+      `_Pendientes de confirmar en FinanzAR_`;
+    bot.sendMessage(msg.chat.id, respuesta, { parse_mode: 'Markdown' });
   }
-
-  respuesta += `\n🏷 ${guardado.categoria}  ·  📅 ${guardado.fecha}`;
-  respuesta += `\n\n_Pendiente de confirmar en FinanzAR_`;
-
-  bot.sendMessage(msg.chat.id, respuesta, { parse_mode: 'Markdown' });
 });
 
 // ── Helpers ───────────────────────────────────────────────

@@ -1088,6 +1088,7 @@ function toggleSuscripcion(id) {
 
 function addCuota() {
   const nombre  = document.getElementById('cuota-nombre').value.trim();
+  const persona = document.getElementById('cuota-persona').value.trim() || 'Yo';
   const monto   = parseFloat(document.getElementById('cuota-monto').value);
   const total   = parseInt(document.getElementById('cuota-total').value);
   const pagadas = parseInt(document.getElementById('cuota-pagadas').value) || 0;
@@ -1095,10 +1096,11 @@ function addCuota() {
   const nota    = document.getElementById('cuota-nota').value.trim();
   if (!nombre || isNaN(monto) || monto <= 0 || isNaN(total) || total < 1) { showToast('Completá los datos requeridos.', 'error'); return; }
   if (pagadas >= total) { showToast('Las cuotas pagadas no pueden igualar al total.', 'error'); return; }
-  state.cuotas.push({ id: Date.now(), nombre, monto, total, pagadas, dia, nota });
+  state.cuotas.push({ id: Date.now(), nombre, persona, monto, total, pagadas, dia, nota, fechaInicio: getMesActual() });
   save(); closeModal('modal-cuota');
   ['cuota-nombre','cuota-monto','cuota-total','cuota-nota'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('cuota-pagadas').value = '0';
+  document.getElementById('cuota-persona').value = 'Yo';
   renderCompromisos(); showToast('Cuota agregada ✓');
 }
 
@@ -1150,7 +1152,10 @@ function renderCompromisos() {
         return `<div style="padding:12px 0;border-bottom:1px solid var(--border2)${terminada ? ';opacity:0.5' : ''}">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.88rem;font-weight:600;color:var(--text)">${c.nombre}${terminada ? ' <span style="color:var(--green);font-size:0.72rem">✓ Terminada</span>' : ''}</div>
+              <div style="display:flex;align-items:center;gap:7px">
+                <div style="font-size:0.88rem;font-weight:600;color:var(--text)">${c.nombre}${terminada ? ' <span style="color:var(--green);font-size:0.72rem">✓ Terminada</span>' : ''}</div>
+                <span style="font-size:0.65rem;font-weight:600;padding:1px 7px;border-radius:20px;background:var(--accent-light);color:var(--accent)">${c.persona || 'Yo'}</span>
+              </div>
               <div style="font-size:0.7rem;color:var(--muted);margin-top:2px">${c.pagadas}/${c.total} cuotas · día ${c.dia}${c.nota ? ' · ' + c.nota : ''}</div>
               <div style="margin-top:8px">
                 <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">
@@ -1269,6 +1274,7 @@ function openEditCuota(id) {
   setFormValues({
     'edit-cuota-id': c.id,
     'edit-cuota-nombre': c.nombre,
+    'edit-cuota-persona': c.persona || 'Yo',
     'edit-cuota-monto': c.monto,
     'edit-cuota-total': c.total,
     'edit-cuota-pagadas': c.pagadas,
@@ -1283,12 +1289,13 @@ function saveEditCuota() {
   const c       = state.cuotas.find(c => c.id === id);
   if (!c) return;
   const nombre  = document.getElementById('edit-cuota-nombre').value.trim();
+  const persona = document.getElementById('edit-cuota-persona').value.trim() || 'Yo';
   const monto   = parseFloat(document.getElementById('edit-cuota-monto').value);
   const total   = parseInt(document.getElementById('edit-cuota-total').value);
   const pagadas = parseInt(document.getElementById('edit-cuota-pagadas').value) || 0;
   if (!nombre || isNaN(monto) || monto <= 0 || isNaN(total) || total < 1) { showToast('Completá los datos requeridos.', 'error'); return; }
   if (pagadas >= total) { showToast('Las cuotas pagadas no pueden igualar al total.', 'error'); return; }
-  c.nombre = nombre; c.monto = monto; c.total = total; c.pagadas = pagadas;
+  c.nombre = nombre; c.persona = persona; c.monto = monto; c.total = total; c.pagadas = pagadas;
   c.dia    = parseInt(document.getElementById('edit-cuota-dia').value) || 10;
   c.nota   = document.getElementById('edit-cuota-nota').value.trim();
   save(); closeModal('modal-edit-cuota');
